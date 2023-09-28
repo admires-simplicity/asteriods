@@ -38,12 +38,16 @@ int main() {
       player.y_velocity -= std::sin(player.angle * PI/180.0);
     } 
     if (IsKeyDown(KEY_A)) {
-
+      player.x_velocity -= std::sin(player.angle * PI/180.0);
+      player.y_velocity -= std::cos(player.angle * PI/180.0);
     }
     if (IsKeyDown(KEY_S)) {
-      
+      player.x_velocity -= std::cos(player.angle * PI/180.0);
+      player.y_velocity += std::sin(player.angle * PI/180.0);
     }
     if (IsKeyDown(KEY_D)) {
+      player.x_velocity += std::sin(player.angle * PI/180.0);
+      player.y_velocity += std::cos(player.angle * PI/180.0);
     }
 
     if (IsKeyDown(KEY_Q)) player.angle += 1.3;
