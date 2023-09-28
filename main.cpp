@@ -3,12 +3,16 @@
 #include <raylib.h>
 #include <rlgl.h>
 
+#define MAX_VELOCITY 10.0f
+
 class Player {
 public:
   float x;
   float y;
+  float x_velocity;
+  float y_velocity;
   float angle;
-  Player(float x, float y) : x(x), y(y), angle(0) {}
+  Player(float x, float y) : x(x), y(y), x_velocity(0), y_velocity(0), angle(0) {}
 };
 
 int main() {
@@ -18,8 +22,6 @@ int main() {
   Player player{ screenSize.x/2, screenSize.y/2 };
 
   Camera2D camera{ 0 };
-  //camera.target = {player.x() - screenSize.x/2, player.y() - screenSize.y/2};
-  //camera.target = {player.x(), player.y()};
   camera.zoom = 1.0f;
 
 
@@ -29,18 +31,29 @@ int main() {
     ClearBackground(LIGHTGRAY);
     BeginMode2D(camera);
 
-    if (IsKeyDown(KEY_A)) player.x -= 1;
-    if (IsKeyDown(KEY_D)) player.x += 1;
-    if (IsKeyDown(KEY_W)) player.y -= 1;
-    if (IsKeyDown(KEY_S)) player.y += 1;
+    if (IsKeyDown(KEY_A)) player.x_velocity -= 1;
+    if (IsKeyDown(KEY_D)) player.x_velocity += 1;
+    if (IsKeyDown(KEY_W)) player.y_velocity -= 1;
+    if (IsKeyDown(KEY_S)) player.y_velocity += 1;
 
     if (IsKeyDown(KEY_Q)) player.angle += 1.3;
     if (IsKeyDown(KEY_E)) player.angle -= 1.3;
 
 
-    std::cout << player.x << ' ' << player.y << ' ' << player.angle << '\n';
+    player.x += player.x_velocity;
+    player.y += player.y_velocity;
 
-    //DrawRectangle(-10, 10, 100, 100, BLACK);
+    //player.x = ((int)player.x % (int)screenSize.x) + (player.x - (float)(int)player.x);
+    //player.y = ((int)player.y % (int)screenSize.y) + (player.y - (float)(int)player.y);
+
+    if (player.x > screenSize.x) player.x -= screenSize.x;
+    else if (player.x < 0.0f) player.x = screenSize.x - player.x;
+
+    if (player.y > screenSize.y) player.y -= screenSize.y;
+    else if (player.y < 0.0f) player.y = screenSize.y - player.y;
+
+
+    //std::cout << player.x << ' ' << player.y << ' ' << player.angle << '\n';
 
     rlPushMatrix();
     
@@ -54,35 +67,8 @@ int main() {
       BLACK
     );
 
-    // DrawTriangle(
-    //   {player.x - 20.0f, player.y + 20.0f},
-    //   {player.x + 20.0f, player.y + 20.0f},
-    //   {player.x        , player.y - 20.0f},
-    //   BLACK
-    // );
-    
-    // DrawTriangle(
-    //   {50 + player.x        , player.y - 20.0f},
-    //   {50 + player.x - 20.0f, player.y + 20.0f},
-    //   {50 + player.x + 20.0f, player.y + 20.0f},
-    
-    //   GREEN
-    // );
-    
-    // DrawTriangle(
-    //   {-50 + player.x + 20.0f, player.y + 20.0f},
-    //   {-50 + player.x        , player.y - 20.0f},
-    //   {-50 + player.x - 20.0f, player.y + 20.0f},
-    //   RED
-    // );
-
-
-
-    // DrawCircle(player.x, player.y, 10.0f, RED);
 
     rlPopMatrix();
-
-    //DrawRectangle(-10, 300, 100, 100, BLACK);
 
 
     EndMode2D();
