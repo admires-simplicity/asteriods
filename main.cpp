@@ -6,6 +6,8 @@
 #include <raylib.h>
 #include <rlgl.h>
 
+#define DDDD_DEBUG
+
 class Laserbeam {
 public:
   float x;
@@ -40,6 +42,8 @@ int main() {
   Player player{ screenSize.x/2, screenSize.y/2 };
 
   Camera2D camera{ 0 };
+  camera.offset = {screenSize.x/2, screenSize.y/2};
+  camera.target = camera.offset;
   camera.zoom = 1.0f;
 
   Laserbeam laserbeam {0, 0, 0};
@@ -49,6 +53,17 @@ int main() {
     BeginDrawing();
     ClearBackground(LIGHTGRAY);
     BeginMode2D(camera);
+
+    DrawRectangle(0, 0, screenSize.x, screenSize.y, WHITE);
+
+    camera.zoom += ((float)GetMouseWheelMove()*0.05f);
+
+#ifdef DDDD_DEBUG
+    if (IsKeyDown(KEY_LEFT)) camera.target.x -= 3.0f;
+    if (IsKeyDown(KEY_RIGHT)) camera.target.x += 3.0f;
+    if (IsKeyDown(KEY_UP)) camera.target.y -= 3.0f;
+    if (IsKeyDown(KEY_DOWN)) camera.target.y += 3.0f;
+#endif
 
     if (IsKeyDown(KEY_W)) {
       player.x_velocity += std::cos(player.angle * PI/180.0) * player.acceleration;
