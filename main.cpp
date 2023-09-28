@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <math.h>
+
 #include <raylib.h>
 #include <rlgl.h>
 
@@ -12,7 +14,7 @@ public:
   float x_velocity;
   float y_velocity;
   float angle;
-  Player(float x, float y) : x(x), y(y), x_velocity(0), y_velocity(0), angle(0) {}
+  Player(float x, float y) : x(x), y(y), x_velocity(0), y_velocity(0), angle(90.0f) {}
 };
 
 int main() {
@@ -31,10 +33,18 @@ int main() {
     ClearBackground(LIGHTGRAY);
     BeginMode2D(camera);
 
-    if (IsKeyDown(KEY_A)) player.x_velocity -= 1;
-    if (IsKeyDown(KEY_D)) player.x_velocity += 1;
-    if (IsKeyDown(KEY_W)) player.y_velocity -= 1;
-    if (IsKeyDown(KEY_S)) player.y_velocity += 1;
+    if (IsKeyDown(KEY_W)) {
+      player.x_velocity += std::cos(player.angle * PI/180.0);
+      player.y_velocity -= std::sin(player.angle * PI/180.0);
+    } 
+    if (IsKeyDown(KEY_A)) {
+
+    }
+    if (IsKeyDown(KEY_S)) {
+      
+    }
+    if (IsKeyDown(KEY_D)) {
+    }
 
     if (IsKeyDown(KEY_Q)) player.angle += 1.3;
     if (IsKeyDown(KEY_E)) player.angle -= 1.3;
@@ -61,9 +71,9 @@ int main() {
     rlRotatef(player.angle, 0.0f, 0.0f, -1.0f);
 
     DrawTriangle(
+      { 20.0f,   0.0f},
+      {-20.0f, -20.0f},
       {-20.0f,  20.0f},
-      { 20.0f,  20.0f},
-      {  0.0f, -20.0f},
       BLACK
     );
 
