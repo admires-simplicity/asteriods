@@ -1,5 +1,5 @@
 #include <iostream>
-#include <queue>
+#include <deque>
 
 #include <math.h>
 
@@ -10,15 +10,15 @@
 
 class Laserbeam {
 public:
+  constexpr static float width { 10.0f };
+  constexpr static float height { 2.0f };
   float x;
   float y;
   float speed;
   float angle;
   float length;
-  float width;
-  float height;
   Laserbeam(float x, float y, float angle) : x(x), y(y), speed(7.0f), 
-  angle(angle), length(10.0f), width(10.0f), height(2.0f) {}
+  angle(angle), length(10.0f) {}
 };
 
 class Player {
@@ -30,12 +30,14 @@ public:
   float angle;
   float acceleration;
   float max_velocity;
-  std::queue<Laserbeam> lasers;
+  std::deque<Laserbeam> lasers;
   Player(float x, float y) : x(x), y(y), x_velocity(0), y_velocity(0),
   angle(90.0f), acceleration(0.1f), max_velocity(10.0f), lasers() {}
 };
 
 int main() {
+  std::cout << __func__ << '\n';
+
   Vector2 screenSize { 1400, 1050 };
   InitWindow(screenSize.x, screenSize.y, "GAME !!!");
 
@@ -46,7 +48,7 @@ int main() {
   camera.target = camera.offset;
   camera.zoom = 1.0f;
 
-  Laserbeam laserbeam {0, 0, 0};
+  //Laserbeam laserbeam {0, 0, 0};
 
   SetTargetFPS(60);
   while(!WindowShouldClose()) {
@@ -91,12 +93,23 @@ int main() {
     if (IsKeyDown(KEY_Q)) player.angle += 2.0;
     if (IsKeyDown(KEY_E)) player.angle -= 2.0;
     
-    if (IsKeyDown(KEY_J)) laserbeam = Laserbeam(
-      player.x + std::cos(laserbeam.angle * PI/180.0) * laserbeam.width,
-      player.y - std::sin(laserbeam.angle * PI/180.0) * laserbeam.width,
-      player.angle);
-    laserbeam.x += std::cos(laserbeam.angle * PI/180.0) * laserbeam.speed;
-    laserbeam.y -= std::sin(laserbeam.angle * PI/180.0) * laserbeam.speed;
+    if (IsKeyDown(KEY_J)) {
+      //laserbeam =
+      player.lasers.push_back(
+        Laserbeam(
+        player.x + std::cos(player.angle * PI/180.0) * Laserbeam::width,
+        player.y - std::sin(player.angle * PI/180.0) * Laserbeam::width,
+        player.angle)
+      );
+    }
+    // laserbeam.x += std::cos(laserbeam.angle * PI/180.0) * laserbeam.speed;
+    // laserbeam.y -= std::sin(laserbeam.angle * PI/180.0) * laserbeam.speed;
+    std::erase_if(player.lasers, [&screenSize](Laserbeam &l){
+      return l.x < 0 || l.x > screenSize.x || l.y < 0 || l.y > screenSize.y; });
+    for (auto &l : player.lasers) {
+      l.x += std::cos(l.angle * PI/180.0) * l.speed;
+      l.y -= std::sin(l.angle * PI/180.0) * l.speed;
+    }
 
 
     //player.x = ((int)player.x % (int)screenSize.x) + (player.x - (float)(int)player.x);
@@ -126,12 +139,15 @@ int main() {
 
     rlPopMatrix();
 
-    rlPushMatrix();
-    rlTranslatef(laserbeam.x, laserbeam.y, 0.0f);
-    rlRotatef(laserbeam.angle, 0.0f, 0.0f, -1.0f);
+    for (auto l : player.lasers) {
+      rlPushMatrix();
+      rlTranslatef(l.x, l.y, 0.0f);
+      rlRotatef(l.angle, 0.0f, 0.0f, -1.0f);
 
-    DrawRectangle(0, 0, laserbeam.width, laserbeam.height, RED);
-    rlPopMatrix();
+      DrawRectangle(0, 0, l.width, l.height, RED);
+      rlPopMatrix();
+    }
+    
 
     EndMode2D();
     EndDrawing();
