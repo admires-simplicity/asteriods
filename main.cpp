@@ -30,9 +30,12 @@ public:
   float angle;
   float acceleration;
   float max_velocity;
+  int laser_cooldown;
+  int laser_recharge_time;
   std::deque<Laserbeam> lasers;
   Player(float x, float y) : x(x), y(y), x_velocity(0), y_velocity(0),
-  angle(90.0f), acceleration(0.1f), max_velocity(10.0f), lasers() {}
+    angle(90.0f), acceleration(0.1f), max_velocity(10.0f), laser_cooldown(0),
+    laser_recharge_time(20), lasers() {}
 };
 
 std::tuple<float, float> normalize_vec(float max_velo, float x_velo, float y_velo) {
@@ -63,9 +66,10 @@ int main() {
 
     DrawRectangle(0, 0, screenSize.x, screenSize.y, WHITE);
 
-    camera.zoom += ((float)GetMouseWheelMove()*0.05f);
 
 #ifdef DDDD_DEBUG
+    camera.zoom += ((float)GetMouseWheelMove()*0.05f);
+
     if (IsKeyDown(KEY_LEFT)) camera.target.x -= 3.0f;
     if (IsKeyDown(KEY_RIGHT)) camera.target.x += 3.0f;
     if (IsKeyDown(KEY_UP)) camera.target.y -= 3.0f;
@@ -108,13 +112,16 @@ int main() {
     if (IsKeyDown(KEY_Q)) player.angle += 2.0;
     if (IsKeyDown(KEY_E)) player.angle -= 2.0;
     
-    if (IsKeyDown(KEY_J)) {
+    if (!player.laser_cooldown && IsKeyDown(KEY_J)) {
       player.lasers.push_back(
         Laserbeam(
         player.x + std::cos(player.angle * PI/180.0) * Laserbeam::width,
         player.y - std::sin(player.angle * PI/180.0) * Laserbeam::width,
         player.angle)
       );
+      player.laser_cooldown = player.laser_recharge_time;
+    } else if (player.laser_cooldown) {
+      --player.laser_cooldown;
     }
 
     std::erase_if(player.lasers, [&screenSize](Laserbeam &l){
