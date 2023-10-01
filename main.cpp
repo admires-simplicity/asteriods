@@ -35,6 +35,12 @@ public:
   angle(90.0f), acceleration(0.1f), max_velocity(10.0f), lasers() {}
 };
 
+std::tuple<float, float> normalize_vec(float max_velo, float x_velo, float y_velo) {
+  float total_velo = std::abs(x_velo) + std::abs(y_velo);
+  float norm_factor = (total_velo > 10.0) ? std::abs(max_velo) / (total_velo) : 1.0f;
+  return { x_velo * norm_factor, y_velo * norm_factor };
+}
+
 int main() {
   std::cout << __func__ << '\n';
 
@@ -67,25 +73,46 @@ int main() {
     if (IsKeyDown(KEY_DOWN)) camera.target.y += 3.0f;
 #endif
 
+    float next_x_velo { 0 };
+    float next_y_velo { 0 };
+    bool key_pressed { false };
     if (IsKeyDown(KEY_W)) {
-      player.x_velocity += std::cos(player.angle * PI/180.0) * player.acceleration;
-      player.y_velocity -= std::sin(player.angle * PI/180.0) * player.acceleration;
+      next_x_velo = player.x_velocity + std::cos(player.angle * PI/180.0) * player.acceleration;
+      next_y_velo = player.y_velocity - std::sin(player.angle * PI/180.0) * player.acceleration;
+      key_pressed = true;
     } 
     if (IsKeyDown(KEY_A)) {
-      player.x_velocity -= std::sin(player.angle * PI/180.0) * player.acceleration;
-      player.y_velocity -= std::cos(player.angle * PI/180.0) * player.acceleration;
+      next_x_velo = player.x_velocity - std::sin(player.angle * PI/180.0) * player.acceleration;
+      next_y_velo = player.y_velocity - std::cos(player.angle * PI/180.0) * player.acceleration;
+      key_pressed = true;
     }
     if (IsKeyDown(KEY_S)) {
-      player.x_velocity -= std::cos(player.angle * PI/180.0) * player.acceleration;
-      player.y_velocity += std::sin(player.angle * PI/180.0) * player.acceleration;
+      next_x_velo = player.x_velocity - std::cos(player.angle * PI/180.0) * player.acceleration;
+      next_y_velo = player.y_velocity + std::sin(player.angle * PI/180.0) * player.acceleration;
+      key_pressed = true;
     }
     if (IsKeyDown(KEY_D)) {
-      player.x_velocity += std::sin(player.angle * PI/180.0) * player.acceleration;
-      player.y_velocity += std::cos(player.angle * PI/180.0) * player.acceleration;
+      next_x_velo = player.x_velocity + std::sin(player.angle * PI/180.0) * player.acceleration;
+      next_y_velo = player.y_velocity + std::cos(player.angle * PI/180.0) * player.acceleration;
+      key_pressed = true;
     }
 
-    if (player.x_velocity > player.max_velocity) player.x_velocity = player.max_velocity;
-    if (player.y_velocity > player.max_velocity) player.y_velocity = player.max_velocity;
+    // if (key_pressed && std::abs(next_x_velo) + std::abs(next_y_velo) <= std::abs(player.max_velocity)) {
+    //   std::cout << "normal accel ";
+    //   player.x_velocity = next_x_velo;
+    //   player.y_velocity = next_y_velo;
+    // } else if (key_pressed) {
+    //   std::cout << "normalized accel ";
+    //   player.x_velocity = (next_x_velo < 0 ? -1 : 1) * player.max_velocity * next_x_velo / (next_x_velo + next_y_velo);
+    //   player.y_velocity = (next_y_velo < 0 ? -1 : 1) * player.max_velocity * next_y_velo / (next_x_velo + next_y_velo);
+    //   //TODO:: FIX THIS
+    // }
+
+    if (key_pressed) {
+      std::tie(player.x_velocity, player.y_velocity) = normalize_vec(player.max_velocity, next_x_velo, next_y_velo);
+    }
+
+    std::cout << "x_velocity: " << player.x_velocity << " y_velocity: " << player.y_velocity << " abs(total): " << std::abs(player.x_velocity) + std::abs(player.y_velocity) << "\n";
 
     player.x += player.x_velocity;
     player.y += player.y_velocity;
