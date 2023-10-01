@@ -54,7 +54,6 @@ int main() {
   camera.target = camera.offset;
   camera.zoom = 1.0f;
 
-  //Laserbeam laserbeam {0, 0, 0};
 
   SetTargetFPS(60);
   while(!WindowShouldClose()) {
@@ -97,17 +96,6 @@ int main() {
       key_pressed = true;
     }
 
-    // if (key_pressed && std::abs(next_x_velo) + std::abs(next_y_velo) <= std::abs(player.max_velocity)) {
-    //   std::cout << "normal accel ";
-    //   player.x_velocity = next_x_velo;
-    //   player.y_velocity = next_y_velo;
-    // } else if (key_pressed) {
-    //   std::cout << "normalized accel ";
-    //   player.x_velocity = (next_x_velo < 0 ? -1 : 1) * player.max_velocity * next_x_velo / (next_x_velo + next_y_velo);
-    //   player.y_velocity = (next_y_velo < 0 ? -1 : 1) * player.max_velocity * next_y_velo / (next_x_velo + next_y_velo);
-    //   //TODO:: FIX THIS
-    // }
-
     if (key_pressed) {
       std::tie(player.x_velocity, player.y_velocity) = normalize_vec(player.max_velocity, next_x_velo, next_y_velo);
     }
@@ -121,7 +109,6 @@ int main() {
     if (IsKeyDown(KEY_E)) player.angle -= 2.0;
     
     if (IsKeyDown(KEY_J)) {
-      //laserbeam =
       player.lasers.push_back(
         Laserbeam(
         player.x + std::cos(player.angle * PI/180.0) * Laserbeam::width,
@@ -129,8 +116,7 @@ int main() {
         player.angle)
       );
     }
-    // laserbeam.x += std::cos(laserbeam.angle * PI/180.0) * laserbeam.speed;
-    // laserbeam.y -= std::sin(laserbeam.angle * PI/180.0) * laserbeam.speed;
+
     std::erase_if(player.lasers, [&screenSize](Laserbeam &l){
       return l.x < 0 || l.x > screenSize.x || l.y < 0 || l.y > screenSize.y; });
     for (auto &l : player.lasers) {
@@ -139,8 +125,6 @@ int main() {
     }
 
 
-    //player.x = ((int)player.x % (int)screenSize.x) + (player.x - (float)(int)player.x);
-    //player.y = ((int)player.y % (int)screenSize.y) + (player.y - (float)(int)player.y);
 
     if (player.x > screenSize.x) player.x -= screenSize.x;
     else if (player.x < 0.0f) player.x = screenSize.x - player.x;
@@ -149,7 +133,6 @@ int main() {
     else if (player.y < 0.0f) player.y = screenSize.y - player.y;
 
 
-    //std::cout << player.x << ' ' << player.y << ' ' << player.angle << '\n';
 
     rlPushMatrix();
     
