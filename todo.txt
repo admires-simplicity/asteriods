@@ -1,1 +1,3 @@
 add laser cooldown timer
+
+when lasers shoot from the player they are off center. fix that.

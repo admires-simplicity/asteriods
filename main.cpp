@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <deque>
 
 #include <math.h>
@@ -16,17 +17,28 @@ std::tuple<float, float> normalize_vec(float max_velo, float x_velo, float y_vel
   return { x_velo * norm_factor, y_velo * norm_factor };
 }
 
+inline float deg2rad(float angle) {
+  return angle * PI/180.0;
+}
+
+enum class Directions : int {
+  forward = 0,
+  left = 90,
+  backward = 180,
+  right = 270
+};
 
 class Laserbeam {
 public:
-  constexpr static float width { 10.0f };
-  constexpr static float height { 2.0f };
   float x;
   float y;
+  float width;
+  float height;
   float speed;
   float angle;
   float length;
-  Laserbeam(float x, float y, float angle) : x(x), y(y), speed(7.0f), 
+  Laserbeam(float x, float y, float width, float height, float angle) :
+    x(x), y(y), width(width), height(height), speed(7.0f), 
   angle(angle), length(10.0f) {}
 };
 
@@ -41,37 +53,64 @@ public:
   float max_velocity;
   int laser_cooldown;
   int laser_recharge_time;
+  int laser_width;
+  int laser_height;
   std::deque<Laserbeam> lasers;
   Player(float x, float y) : x(x), y(y), x_velocity(0), y_velocity(0),
     angle(90.0f), acceleration(0.1f), max_velocity(10.0f), laser_cooldown(0),
-    laser_recharge_time(20), lasers() {}
+    laser_recharge_time(20), laser_width(10.0f), laser_height(2.0f), lasers() {}
   void control() {
     if (IsKeyDown(KEY_Q)) angle += 2.0;
     if (IsKeyDown(KEY_E)) angle -= 2.0;
 
 
-    float next_x_velo { 0 };
-    float next_y_velo { 0 };
+    float next_x_velo { x_velocity };
+    float next_y_velo { y_velocity };
     bool key_pressed { false };
+    // if (IsKeyDown(KEY_W)) {
+    //   next_x_velo += x_velocity + std::cos(angle * PI/180.0) * acceleration;
+    //   next_y_velo += y_velocity - std::sin(angle * PI/180.0) * acceleration;
+    //   key_pressed = true;
+    // } 
+    // if (IsKeyDown(KEY_A)) {
+    //   next_x_velo += x_velocity - std::sin(angle * PI/180.0) * acceleration;
+    //   next_y_velo += y_velocity - std::cos(angle * PI/180.0) * acceleration;
+    //   key_pressed = true;
+    // }
+    // if (IsKeyDown(KEY_S)) {
+    //   next_x_velo += x_velocity - std::cos(angle * PI/180.0) * acceleration;
+    //   next_y_velo += y_velocity + std::sin(angle * PI/180.0) * acceleration;
+    //   key_pressed = true;
+    // }
+    // if (IsKeyDown(KEY_D)) {
+    //   next_x_velo += x_velocity + std::sin(angle * PI/180.0) * acceleration;
+    //   next_y_velo += y_velocity + std::cos(angle * PI/180.0) * acceleration;
+    //   key_pressed = true;
+    // }
+
+    //int movement_keys_down{0};
+    //float next_angle = 0;
+    std::vector<Directions> thrusters;
     if (IsKeyDown(KEY_W)) {
-      next_x_velo = x_velocity + std::cos(angle * PI/180.0) * acceleration;
-      next_y_velo = y_velocity - std::sin(angle * PI/180.0) * acceleration;
+      thrusters.push_back(Directions::forward);
       key_pressed = true;
-    } 
+    }
     if (IsKeyDown(KEY_A)) {
-      next_x_velo = x_velocity - std::sin(angle * PI/180.0) * acceleration;
-      next_y_velo = y_velocity - std::cos(angle * PI/180.0) * acceleration;
+      thrusters.push_back(Directions::left);
       key_pressed = true;
     }
     if (IsKeyDown(KEY_S)) {
-      next_x_velo = x_velocity - std::cos(angle * PI/180.0) * acceleration;
-      next_y_velo = y_velocity + std::sin(angle * PI/180.0) * acceleration;
+      thrusters.push_back(Directions::backward);
       key_pressed = true;
     }
     if (IsKeyDown(KEY_D)) {
-      next_x_velo = x_velocity + std::sin(angle * PI/180.0) * acceleration;
-      next_y_velo = y_velocity + std::cos(angle * PI/180.0) * acceleration;
+      thrusters.push_back(Directions::right);
       key_pressed = true;
+    }
+
+    for (Directions d : thrusters) {
+      next_x_velo += std::cos(deg2rad(angle + (float)d)) * (acceleration / thrusters.size());
+      next_y_velo -= std::sin(deg2rad(angle + (float)d)) * (acceleration / thrusters.size());
     }
 
     if (key_pressed) {
@@ -81,8 +120,10 @@ public:
     if (!laser_cooldown && IsKeyDown(KEY_J)) {
       lasers.push_back(
         Laserbeam(
-        x + std::cos(angle * PI/180.0) * Laserbeam::width,
-        y - std::sin(angle * PI/180.0) * Laserbeam::width,
+        x + std::cos(angle * PI/180.0) * laser_width,
+        y - std::sin(angle * PI/180.0) * laser_width,
+        laser_width,
+        laser_height,
         angle)
       );
       laser_cooldown = laser_recharge_time;
