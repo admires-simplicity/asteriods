@@ -2,6 +2,7 @@
 #include <vector>
 #include <deque>
 
+#include <cstdlib>
 #include <math.h>
 
 #include <raylib.h>
@@ -63,33 +64,10 @@ public:
     if (IsKeyDown(KEY_Q)) angle += 2.0;
     if (IsKeyDown(KEY_E)) angle -= 2.0;
 
-
     float next_x_velo { x_velocity };
     float next_y_velo { y_velocity };
     bool key_pressed { false };
-    // if (IsKeyDown(KEY_W)) {
-    //   next_x_velo += x_velocity + std::cos(angle * PI/180.0) * acceleration;
-    //   next_y_velo += y_velocity - std::sin(angle * PI/180.0) * acceleration;
-    //   key_pressed = true;
-    // } 
-    // if (IsKeyDown(KEY_A)) {
-    //   next_x_velo += x_velocity - std::sin(angle * PI/180.0) * acceleration;
-    //   next_y_velo += y_velocity - std::cos(angle * PI/180.0) * acceleration;
-    //   key_pressed = true;
-    // }
-    // if (IsKeyDown(KEY_S)) {
-    //   next_x_velo += x_velocity - std::cos(angle * PI/180.0) * acceleration;
-    //   next_y_velo += y_velocity + std::sin(angle * PI/180.0) * acceleration;
-    //   key_pressed = true;
-    // }
-    // if (IsKeyDown(KEY_D)) {
-    //   next_x_velo += x_velocity + std::sin(angle * PI/180.0) * acceleration;
-    //   next_y_velo += y_velocity + std::cos(angle * PI/180.0) * acceleration;
-    //   key_pressed = true;
-    // }
 
-    //int movement_keys_down{0};
-    //float next_angle = 0;
     std::vector<Directions> thrusters;
     if (IsKeyDown(KEY_W)) {
       thrusters.push_back(Directions::forward);
@@ -142,8 +120,21 @@ public:
   float x_velocity;
   float y_velocity;
   float radius;
-  Asteroid() : x(0.0f), y(0.0f), x_velocity(1.0f), y_velocity(2.0f), radius(3.0f) {}
+  float hp;
+  Asteroid() : x(0.0f), y(0.0f), x_velocity(1.0f), y_velocity(2.0f),
+    radius(3.0f), hp(1) {}
+  Asteroid(float x, float y, float x_velocity, float y_velocity, float radius) :
+    x(x), y(y), x_velocity(x_velocity), y_velocity(y_velocity), radius(radius),
+    hp((radius >= 3.0f) ? radius / 3.0f : 1.0f) {}
 };
+
+Asteroid randomAsteroid(float radius) {
+  float x { rand() % (int)screenSize.x };
+  float y { rand() % (int)screenSize.y };
+  float x_velocity { (rand() % 3) + 1};   //TODO: make this better.
+  float y_velocity { (rand() % 3) + 1};
+  return Asteroid(x, y, x_velocity, y_velocity, radius);
+}
 
 
 template <typename T>
@@ -174,7 +165,13 @@ int main() {
   camera.target = camera.offset;
   camera.zoom = 1.0f;
 
-  Asteroid asteroid;
+  //Asteroid asteroid;
+
+  std::vector<Asteroid> asteroids;
+  for (int i = 0; i < 3; ++i) {
+    asteroids.push_back(randomAsteroid(3.0f));
+  }
+
 
 
   SetTargetFPS(60);
@@ -214,16 +211,28 @@ int main() {
     for (auto &l : player.lasers) {
       l.x += std::cos(l.angle * PI/180.0) * l.speed;
       l.y -= std::sin(l.angle * PI/180.0) * l.speed;
-    }
 
+      //if (CheckCollisionCircleRec({asteroid.x, asteroid.y}, asteroid.radius, {l.x, l.y, l.width, l.height})) {
+      //  --asteroid.hp;
+      //}
+      for (Asteroid &a : asteroids) {
+        if (CheckCollisionCircleRec({a.x, a.y}, a.radius, {l.x, l.y, l.width, l.height})) {
+          --a.hp;
+        }
+      }
+    }
     
 
     screenwrap(player);
 
-    screenwrap(asteroid);
+    //screenwrap(asteroid);
+    //update_position(asteroid);
 
-
-    update_position(asteroid);
+    std::erase_if(asteroids, [](Asteroid &a){ return a.hp <= 0.0f; });
+    for (Asteroid &a : asteroids) {
+      screenwrap(a);
+      update_position(a);
+    }
 
 
     rlPushMatrix();
@@ -250,7 +259,10 @@ int main() {
       rlPopMatrix();
     }
     
-    DrawCircle(asteroid.x, asteroid.y, asteroid.radius, BLACK);
+    //if (asteroid.hp) DrawCircle(asteroid.x, asteroid.y, asteroid.radius, BLACK);
+    for (Asteroid &a : asteroids) {
+      DrawCircle(a.x, a.y, a.radius, BLACK);
+    }
 
     EndMode2D();
     EndDrawing();
