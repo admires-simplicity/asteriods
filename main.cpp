@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <deque>
+#include <tuple>
 
 #include <cstdlib>
 #include <math.h>
@@ -126,13 +127,18 @@ public:
   Asteroid(float x, float y, float x_velocity, float y_velocity, float radius) :
     x(x), y(y), x_velocity(x_velocity), y_velocity(y_velocity), radius(radius),
     hp((radius >= 3.0f) ? radius / 3.0f : 1.0f) {}
+  void hit() {
+    --hp;
+    radius -= 3.0f;   //TODO: I think this is potentially dangerous
+  }
 };
 
-Asteroid randomAsteroid(float radius) {
+Asteroid randomAsteroid(float max_radius) {
   float x { rand() % (int)screenSize.x };
   float y { rand() % (int)screenSize.y };
   float x_velocity { (rand() % 3) + 1};   //TODO: make this better.
   float y_velocity { (rand() % 3) + 1};
+  float radius { (rand() % (int)max_radius) + 1} ;
   return Asteroid(x, y, x_velocity, y_velocity, radius);
 }
 
@@ -169,7 +175,7 @@ int main() {
 
   std::vector<Asteroid> asteroids;
   for (int i = 0; i < 3; ++i) {
-    asteroids.push_back(randomAsteroid(3.0f));
+    asteroids.push_back(randomAsteroid(10.0f));
   }
 
 
@@ -217,7 +223,7 @@ int main() {
       //}
       for (Asteroid &a : asteroids) {
         if (CheckCollisionCircleRec({a.x, a.y}, a.radius, {l.x, l.y, l.width, l.height})) {
-          --a.hp;
+          a.hit();
         }
       }
     }
